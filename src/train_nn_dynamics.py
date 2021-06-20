@@ -38,6 +38,9 @@ def train(dataset, model, prefix, epochs, lr, test_only=False, load_file=None):
 
     if load_file:
         model.load_state_dict(torch.load(load_file))
+        print("model loaded")
+        avg_loss = test(model, test_loader, criterion)
+        print("avg_loss: ", avg_loss)
     
     if test_only:
         avg_loss = test(model, test_loader, criterion)
@@ -48,27 +51,27 @@ def train(dataset, model, prefix, epochs, lr, test_only=False, load_file=None):
 
     # training
 
-    plt.figure()
+    # plt.figure()
 
     for epoch in range(epochs):  # loop over the dataset multiple times
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
 
         PATH = '../model/'+prefix+'/epoch_'+str(epoch)+'.pth'
-        if epoch % 20 == 0:
+        if epoch % 100 == 0:
             torch.save(model.state_dict(), PATH)
         print('epoch %d' % (epoch + 1))
         print('train loss: %f' % (train_loss))
         loss_his.append(train_loss)
 
-        if epoch % 10 == 0:
+        if epoch % 100 == 0:
             test_loss = test(model, test_loader, criterion)
             print('test  loss: %f' % (test_loss))
-            plt.plot(loss_his, color='b')
-            plt.pause(0.01)
+            # plt.plot(loss_his, color='b')
+            # plt.pause(0.01)
     print("minimum loss epoch:", np.argmin(loss_his))
     print("minimum loss: ", np.min(loss_his))
     print('Finished Training')
-    plt.show()
+    # plt.show()
 
 def train_epoch(model, train_loader, optimizer, criterion):
     #train for one epoch
@@ -117,13 +120,14 @@ def train_and_save_networks(args):
     dataset = GymDynamicsDataset(args["env_name"])
     
     data, label = dataset[0]
-    print(data)
-    print(label)
+    
     model = FC(args["num_layer"], len(data), args["hidden_dim"], len(label))
 
     train(dataset, model, args["prefix"], args["epochs"], args["lr"], load_file=args["load_path"])
     
     convert(args["prefix"], "epoch_1000", args["num_layer"], len(data), args["hidden_dim"], len(label))
+
+    # convert(args["prefix"], "epoch_400", args["num_layer"], len(data), args["hidden_dim"], len(label))
 
 if __name__ == "__main__":
 
@@ -136,14 +140,43 @@ if __name__ == "__main__":
     #     "prefix": 'ant-FC2-100',
     # }
 
-    unicycle_args = {
+    # unicycle_args_3 = {
+    #     "env_name": "Unicycle-v0",
+    #     "num_layer": 3,
+    #     "hidden_dim": 100,
+    #     "epochs": 1005,
+    #     "lr": 0.001,
+    #     "prefix": 'unicycle-FC3-100-rk4-so',
+    #     "load_path": "../model/unicycle-FC3-100-rk4/epoch_1000.pth"
+    # }
+
+    unicycle_args_5 = {
         "env_name": "Unicycle-v0",
-        "num_layer": 3,
+        "num_layer": 5,
         "hidden_dim": 100,
         "epochs": 1005,
         "lr": 0.001,
-        "prefix": 'unicycle-FC3-100-rk4',
-        "load_path": "../model/unicycle-FC3-100/epoch_1000.pth"
+        "prefix": 'unicycle-FC5-100-rk4-so',
+        "load_path": None
     }
-    train_and_save_networks(unicycle_args)
 
+    unicycle_args_4 = {
+        "env_name": "Unicycle-v0",
+        "num_layer": 4,
+        "hidden_dim": 50,
+        "epochs": 1005,
+        "lr": 0.001,
+        "prefix": 'unicycle-FC4-50-rk4-so',
+        "load_path": None
+    }
+
+    unicycle_args_35 = {
+        "env_name": "Unicycle-v0",
+        "num_layer": 3,
+        "hidden_dim": 50,
+        "epochs": 1005,
+        "lr": 0.001,
+        "prefix": 'unicycle-FC3-50-rk4-so',
+        "load_path": None
+    }
+    train_and_save_networks(unicycle_args_35)

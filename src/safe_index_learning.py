@@ -5,7 +5,10 @@ import pandas as pd
 import progressbar
 import gym_dynamics
 from datetime import datetime
-
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.simplefilter('error', RuntimeWarning)
 
 class SafeLearning(object):
     def __init__(self, CMAES_args):
@@ -117,19 +120,20 @@ class SafeLearning(object):
 class UnicycleSafetyIndex():
     def __init__(self):
         self.coe = np.zeros(5)
-        nx = 20
-        ny = 20
-        nv = 10
-        nt = 10
-        xs = np.linspace(0, 5, nx)
-        ys = np.linspace(0, 5, ny)
-        vs = np.linspace(-2, 2, nv)
-        ts = np.linspace(-np.pi, np.pi, nt)
-        xm, ym, vm, tm = np.meshgrid(xs, ys, vs, ts)
+        nx = 19
+        ny = 19
+        nv = 9
+        nt = 9
+        self.xs = np.linspace(0, 5, nx+1)
+        self.ys = np.linspace(0, 5, ny+1)
+        self.vs = np.linspace(-2, 2, nv+1)
+        self.ts = np.linspace(-np.pi, np.pi, nt+1)
+        xm, ym, vm, tm = np.meshgrid(self.xs, self.ys, self.vs, self.ts)
 
         self.samples = []
         for i,j,k,l in np.ndindex(xm.shape):
-            self.samples.append(([xm[i,j,k,l], ym[i,j,k,l], vm[i,j,k,l], tm[i,j,k,l]], [0,0]))
+            # self.samples.append(([xm[i,j,k,l], ym[i,j,k,l], vm[i,j,k,l], tm[i,j,k,l]], [0,0]))
+            self.samples.append(([i,j,k,l], [0,0]))
 
         env = gym.make("Unicycle-v0")
         self.max_u = env.max_u
@@ -151,11 +155,20 @@ class UnicycleSafetyIndex():
         dot_d = 2*(x[0]-o[0])*vx + 2*(x[1]-o[1])*vy
         grad_d = np.array([2*(x[0]-o[0]), 2*(x[1]-o[1]), 0, 0])
         grad_dot_d = np.array([2*vx, 2*vy, 2*(x[0]-o[0])*np.cos(x[3]) + 2*(x[1]-o[1])*np.sin(x[3]), 2*(x[0]-o[0])*x[2]*(-np.sin(x[3])) + 2*(x[1]-o[1])*x[2]*(np.cos(x[3]))])
+        # print(self.coe[1]-1)
+        try:
+            a = self.coe[1]*d**(self.coe[1]-1)*grad_d - self.coe[2]*grad_dot_d
+        except:
+            print(self.coe)
+            print(d)
+            print(grad_d)
+            print(grad_dot_d)
+            print(d**(self.coe[1]-1))
         return self.coe[1]*d**(self.coe[1]-1)*grad_d - self.coe[2]*grad_dot_d
 
     def set_params(self, params):
         self.coe = params
-    
+
     def has_valid_control(self, C, d, x):
         f = np.vstack([x[2]*np.cos(x[3]), x[2]*np.sin(x[3]), 0, 0])
         g = np.vstack((np.zeros((2,2)), np.eye(2)))
@@ -165,7 +178,8 @@ class UnicycleSafetyIndex():
     def evaluate(self, params):
         valid = 0
         for sample in self.samples:
-            x, o = sample
+            x_idx, o = sample
+            x = [self.xs[x_idx[0]], self.ys[x_idx[1]], self.vs[x_idx[2]], self.ts[x_idx[3]]]
             phi = self.phi(x, o)
             # C dot_x < d
             # phi(x_k) > 0 -> con: dot_phi(x_k) < -k*phi(x): C = self.grad_phi(x, o)  d = -phi/dt*self.coe[0]
@@ -177,49 +191,81 @@ class UnicycleSafetyIndex():
         self.valid = valid
         return valid
 
+    def visualize(self):
+        valid_cnt = np.zeros((len(self.xs), len(self.ys)))
+        tot_cnt = 0
+        for sample in self.samples:
+            x_idx, o = sample
+            x = [self.xs[x_idx[0]], self.ys[x_idx[1]], self.vs[x_idx[2]], self.ts[x_idx[3]]]
+            # print(x_idx)
+            # print(x)
+            phi = self.phi(x, o)
+            C = self.grad_phi(x, o)
+            d = -phi/self.dt if phi < 0 else -phi/self.dt*self.coe[0]
+            if not self.has_valid_control(C, d, x):
+                continue
+            px,py,v,theta = x
+            # if (px,py) not in valid_cnt.keys():
+            #     valid_cnt[x_idx[0], x_idx[1]] = 0
+            valid_cnt[x_idx[0], x_idx[1]] += 1
+            tot_cnt += 1
+
+        print("tot_cnt: ", tot_cnt)
+        # plt.figure()
+        sns.set_theme()
+        ax = sns.heatmap(valid_cnt, cmap="YlGnBu", vmin=0)
+        xticks = range(0, len(self.xs), len(self.xs)//5)
+        yticks = range(0, len(self.ys), len(self.ys)//5)
+        ax.set_xticks(xticks)
+        ax.set_yticks(yticks)
+        ax.set_xticklabels(np.array(self.xs[xticks]).astype(int))
+        ax.set_yticklabels(np.array(self.ys[yticks]).astype(int))
+        plt.ylim(0,len(self.ys))
+        plt.xlim(0,len(self.xs))
+        # plt.show()
+        plt.savefig("../results/"+str(self.coe)+".png", dpi=300)
+        # for key in valid_cnt.keys():
+        #     # print(key)
+        #     # print(valid_cnt[key])
+        #     plt.scatter(key[0], key[1], color="b")
+        # plt.show()
+
+        # print(valid_cnt)
+        return valid_cnt
+
     @property
     def log(self):
         return "{} {}".format(str(self.coe), str(self.valid))
 
 def main():
-    env = gym.make("Unicycle-v0")
 
+    config = {
+        "exp_prefix": "pm_learning",
+        "epoch": 3,
+        "elite_ratio": 0.06,
+        "populate_num": 50,
+        "init_params": [4, 2, 0.5],
+        "lower_bound": [0, 1, 0],
+        "upper_bound": [10, 4, 10],
+        "init_sigma_ratio": 0.3,
+        "noise_ratio": 0.01,
+        "evaluator": UnicycleSafetyIndex(),
+    }
 
-    env.state = [0,0,0,0]
-    print(env.state)
-    u = [1,1]
-    print(u)
-    env.step(u)
-    print(env.state)
-    return
-    
-    state = env.reset()
-    
-    for step in range(100):
-        action = env.sample_action()
-        new_state, reward, done, info = env.step(action)
-        state = new_state
-        if done:
-            state = env.reset()
-        env.render()
-
-    # config = {
-    #     "exp_prefix": "pm_learning",
-    #     "epoch": 3,
-    #     "elite_ratio": 0.2,
-    #     "populate_num": 20,
-    #     "init_params": [5, 2, 1],
-    #     "lower_bound": [1, 1, 0],
-    #     "upper_bound": [10, 3, 10],
-    #     "init_sigma_ratio": 0.3,
-    #     "noise_ratio": 0.01,
-    #     "evaluator": UnicycleSafetyIndex(),
-    # }
+    # si = UnicycleSafetyIndex()
+    # si.set_params([5, 2, 0.5])
+    # si.set_params([2, 2, 2])
+    # si.visualize()
 
     # learner = SafeLearning(config)
     # learner.learn()
 
-
+    si = UnicycleSafetyIndex()
+    # si.set_params([1, 3, 2.8])
+    # si.set_params([4, 2, 0.5])
+    si.set_params([1, 1, 1])
+    # si.set_params([0.,         1.0864768,  0.81123281])
+    si.visualize()
 
 if __name__ == "__main__":
     main()

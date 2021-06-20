@@ -13,20 +13,22 @@ class UnicycleEnv(gym.Env):
         self.render_initialized=False
         self.step_cnt = 0
 
-
     def rk4(self, s, u, dt):
-        dot_s1 = self.dynamics(s, u)
-        dot_s2 = self.dynamics(s + 0.5*dt*dot_s1, u)
-        dot_s3 = self.dynamics(s + 0.5*dt*dot_s2, u)
-        dot_s4 = self.dynamics(s + dt*dot_s3, u)
+        dot_s1 = self.dynamics(s, u, dt)
+        dot_s2 = self.dynamics(s + 0.5*dt*dot_s1, u, dt)
+        dot_s3 = self.dynamics(s + 0.5*dt*dot_s2, u, dt)
+        dot_s4 = self.dynamics(s + dt*dot_s3, u, dt)
         dot_s = (dot_s1 + 2*dot_s2 + 2*dot_s3 + dot_s4)/6.0
         return dot_s
     
-    def dynamics(self, s, u):
+    def dynamics(self, s, u, dt):
         x = s[0]
         y = s[1]
         v = s[2]
         theta = s[3]
+
+        # v = s[2] + 0.5*u[0]*dt
+        # theta = s[3] + 0.5*u[1]*dt
 
         dot_x = v * np.cos(theta)
         dot_y = v * np.sin(theta)
@@ -36,11 +38,11 @@ class UnicycleEnv(gym.Env):
         dot_s = np.array([dot_x, dot_y, dot_v, dot_theta])
         return dot_s
 
-    def step(self, u, dt):
+    def step(self, u):
         u = self.filt_action(u)
         
         dot_state = self.rk4(self.state, u, self.dt)
-        # dot_state = self.dynamics(self.state, u)
+        # dot_state = self.dynamics(self.state, u, self.dt)
 
         self.state = self.state + dot_state * self.dt
 
@@ -77,7 +79,7 @@ class UnicycleEnv(gym.Env):
         while x[3] < -3*np.pi:
             x[3] = x[3] + 2 * np.pi
         return x
-    
+
     def get_unicycle_plot(self):
         theta = self.state[3]
         ang = (-self.state[3] + np.pi/2) / np.pi * 180
