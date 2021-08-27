@@ -150,33 +150,53 @@ if __name__ == "__main__":
     #     "load_path": "../model/unicycle-FC3-100-rk4/epoch_1000.pth"
     # }
 
-    unicycle_args_5 = {
-        "env_name": "Unicycle-v0",
-        "num_layer": 5,
-        "hidden_dim": 100,
-        "epochs": 1005,
-        "lr": 0.001,
-        "prefix": 'unicycle-FC5-100-rk4-so',
-        "load_path": None
-    }
+    # unicycle_args_5 = {
+    #     "env_name": "Unicycle-v0",
+    #     "num_layer": 5,
+    #     "hidden_dim": 100,
+    #     "epochs": 1005,
+    #     "lr": 0.001,
+    #     "prefix": 'unicycle-FC5-100-rk4-so',
+    #     "load_path": None
+    # }
 
-    unicycle_args_4 = {
-        "env_name": "Unicycle-v0",
-        "num_layer": 4,
-        "hidden_dim": 50,
-        "epochs": 1005,
-        "lr": 0.001,
-        "prefix": 'unicycle-FC4-50-rk4-so',
-        "load_path": None
-    }
+    # unicycle_args_4 = {
+    #     "env_name": "Unicycle-v0",
+    #     "num_layer": 4,
+    #     "hidden_dim": 50,
+    #     "epochs": 1005,
+    #     "lr": 0.001,
+    #     "prefix": 'unicycle-FC4-50-rk4-so',
+    #     "load_path": None
+    # }
 
-    unicycle_args_35 = {
-        "env_name": "Unicycle-v0",
-        "num_layer": 3,
-        "hidden_dim": 50,
-        "epochs": 1005,
-        "lr": 0.001,
-        "prefix": 'unicycle-FC3-50-rk4-so',
-        "load_path": None
-    }
-    train_and_save_networks(unicycle_args_35)
+    # unicycle_args_35 = {
+    #     "env_name": "Unicycle-v0",
+    #     "num_layer": 3,
+    #     "hidden_dim": 50,
+    #     "epochs": 1005,
+    #     "lr": 0.001,
+    #     "prefix": 'unicycle-FC3-50-rk4-so',
+    #     "load_path": None
+    # }
+
+    # layers = [3,3,4,5]
+    # hidden = [200, 300, 100, 100]
+    # layers = [4, 5]
+    # hidden = [200, 50]
+    # layers = [2, 2, 2, 2, 2, 2]
+    # hidden = [50, 100, 200, 300, 400, 500]
+    layers = [3, 4]
+    hidden = [100, 100]
+    for i in range(len(layers)):
+        unicycle_args = {
+            "env_name": "Unicycle-v0",
+            "num_layer": layers[i],
+            "hidden_dim": hidden[i],
+            "epochs": 1005,
+            "lr": 0.001,
+            "prefix": 'unicycle-FC'+str(layers[i])+'-'+str(hidden[i])+'-rk4-extra',
+            "load_path": None
+        }
+
+        train_and_save_networks(unicycle_args)

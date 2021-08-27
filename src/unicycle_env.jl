@@ -1,6 +1,6 @@
 using Plots
 
-function forward(net, x, u::Vector{Float64}, dt)
+function forward(net::Network, x, u::Vector{Float64}, dt)
     dot_x = compute_output(net, [x;u])
     x = x + dot_x * dt
     return x
@@ -13,11 +13,29 @@ end
 #     return x
 # end
 
-function forward(net, x, U::Vector{Vector{Float64}}, dt)
+function forward(net::Network, x, U::Vector{Vector{Float64}}, dt)
     h = length(U)
     X = [zeros(size(x)) for k = 1:h];
     for k = 1:h
         x = forward(net, x, U[k], dt)
+        X[k] = x
+    end
+    return X
+end
+
+
+
+function forward(x, u::Vector{Float64}, dt)
+    dot_x = traj_rk4(x, u, dt)
+    x = x + dot_x * dt
+    return x
+end
+
+function forward(x, U::Vector{Vector{Float64}}, dt)
+    h = length(U)
+    X = [zeros(size(x)) for k = 1:h];
+    for k = 1:h
+        x = forward(gt, x, U[k], dt)
         X[k] = x
     end
     return X
