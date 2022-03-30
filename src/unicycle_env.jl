@@ -44,7 +44,7 @@ end
 function get_unicycle_endpoints(x, l)
     theta = x[4]
     ang = (-x[4] + π/2) / π * 180
-    l = 0.2
+    l = 0.4
     s = x[[1,2]]
     t = x[[1,2]] - [cos(theta); sin(theta)] * l
     c = s
@@ -74,10 +74,10 @@ function visualize(X; Xref=nothing, Xmpcs=nothing, xlims = nothing, ylims = noth
         
         l = 0.2
         vx, vy, w1x, w1y, w2x, w2y = get_unicycle_endpoints(x, 0.2)
-        p = plot()
-        plot!(p, w1x, w1y, linewidth=18, color=:black, label="")
-        plot!(p, w2x, w2y, linewidth=18, color=:black, label="")
-        plot!(p, vx, vy, linewidth=15, xlims = xlims, ylims = ylims, color=2, label="", aspect_ratio=:equal, dpi=dpi, legendfont=10,legend=:bottomright)
+        p = plot(xtickfontsize=14,ytickfontsize=14,xguidefontsize=14,yguidefontsize=14,legendfontsize=14)
+        plot!(p, w1x, w1y, linewidth=43, color=:black, label="")
+        plot!(p, w2x, w2y, linewidth=43, color=:black, label="")
+        plot!(p, vx, vy, linewidth=34, xlims = xlims, ylims = ylims, color=2, label="", aspect_ratio=:equal, dpi=dpi, legend=:bottomright)
 
 #         p = plot_vehicle(x)
 #         p = plot(sx, sy, linewidth=2, color=2, label="", aspect_ratio=:equal, dpi=dpi)
