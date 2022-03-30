@@ -98,7 +98,4 @@ def writeNNet(weights,biases,fileName):
 
 
 if __name__ == "__main__":
-    # convert('2D_30', 2, 30, 2, net_num=100)
-    # convert('9D_30', 'training', 9, 30, 9, net_num=100)
-
     convert("unicycle-FC3-100", "epoch_900", 3, 6, 100, 4)
