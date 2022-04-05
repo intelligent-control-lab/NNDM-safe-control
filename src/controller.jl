@@ -104,7 +104,6 @@ function find_adam_control(ctrl::AdamBAController, net, x, u0, du, r, safe_set)
     return u0 + du * r
 end
 
-
 function get_control(ctrl::AdamNvController, xref, x, net, obj_cost, dt; obstacles=nothing, safety_index=nothing, u_ref=nothing)
     input = Hyperrectangle(low=[x.-ctrl.ϵ; -ctrl.u_lim], high=[x.+ctrl.ϵ; ctrl.u_lim])
     safe_set = isnothing(obstacles) ? HalfSpace(zero(x).+1.0,Inf) : phi_safe_set(safety_index, x, obstacles, dt)
@@ -191,12 +190,12 @@ function get_control(ctrl::ShootingController, xref, x, net, obj_cost, dt; obsta
     safe_set = isnothing(obstacles) ? HalfSpace(zero(x).+1.0,Inf) : phi_safe_set(safety_index, x, obstacles, dt)
     
     A, b = tosimplehrep(safe_set)
-    min_vio = 1e9
+    min_vio = Inf
     u_most_safe = nothing
     for j in 1:ctrl.num_sample
         u_cand = rand(2) .* ctrl.u_lim * 2 - ctrl.u_lim
         dot_x_cand = compute_output(net, [x; u_cand])
-        vio = -1e9
+        vio = -Inf
         for i in 1:length(b)
             vio = max(vio, A[i,:]' * dot_x_cand - b[i])
         end

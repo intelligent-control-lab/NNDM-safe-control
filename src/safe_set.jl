@@ -94,7 +94,7 @@ function phi(index::FollowingIndex, x, target)
 
     d_min = index.d_min + index.margin
     d_max = index.d_max - index.margin
-    return ((d_max - d_min)/2)^index.phi_power - abs(d - (d_min + d_max)/2)^index.phi_power + index.dot_phi_coe * (2*d*dot_d - dot_d*(d_min + d_max))
+    return -((d_max - d_min)/2)^index.phi_power + abs(d - (d_min + d_max)/2)^index.phi_power + index.dot_phi_coe * (2*d*dot_d - dot_d*(d_min + d_max))
     # return (d-(index.d_min+index.margin))^index.phi_power*(d-(index.d_max-index.margin))^index.phi_power + index.dot_phi_coe*(2*d*dot_d - dot_d*(index.d_min+index.d_max))
 end
 
