@@ -10,3 +10,6 @@ To compare different solvers for tracking with NNDM, run `exp_tracking.ipynb`
 ### Trajectory tracking with safety constraints.
 To reproduce the collision avoidance results, run `collision_index_learning.ipynb`.
 To reproduce the safe following results, run `following_index_learning.ipynb`.
+
+### Scalability and Tracking Plots
+To study the scalability of MIND, or plot tracking trajectories and control signals, run `scalability_and_tracking_plots.ipynb`
